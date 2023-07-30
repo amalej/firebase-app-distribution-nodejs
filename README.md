@@ -1,4 +1,4 @@
-# Firebase App Distibution
+# Firebase App Distibution [![npm](https://img.shields.io/npm/v/firebase-app-distribution)](https://www.npmjs.com/package/firebase-app-distribution) [![npm](https://img.shields.io/npm/dt/firebase-app-distribution)](https://www.npmjs.com/package/firebase-app-distribution?activeTab=versions)
 
 A NodeJS library used to access [Firebase App Distribution APIs](https://firebase.google.com/docs/reference/app-distribution/rest).
 
