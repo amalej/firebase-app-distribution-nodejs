@@ -1,6 +1,6 @@
 import { PROJECT_NUMBER, SERIVCE_ACCOUNT_PATH } from "./contants";
 import { constructUrl, makeRequest } from "../src/utils";
-import FirebaseAppDistribution from "../src/index";
+import { FirebaseAppDistribution } from "../src/index";
 
 describe("Test the utils files", () => {
   it("Should properly construct a base url", () => {

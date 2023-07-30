@@ -1,4 +1,4 @@
-import FirebaseAppDistribution from ".";
+import { FirebaseAppDistribution } from ".";
 import { constructUrl, makeRequest } from "./utils";
 
 export interface Group {
@@ -12,10 +12,6 @@ export interface Group {
 interface GroupListResponse {
   groups: Group[];
   nextPageToken: string;
-}
-
-interface GroupTestersRemoveResponse {
-  emails: string[];
 }
 
 type validGroupId = Lowercase<string>;
@@ -80,9 +76,9 @@ export default class Groups {
     return 200;
   }
 
-  async get(name: string): Promise<Group | null> {
+  async get(groupId: validGroupId): Promise<Group | null> {
     const accessToken = await this.parent.getAccessToken();
-    const url = `${constructUrl(this.projectNumber, `groups/${name}`)}`;
+    const url = `${constructUrl(this.projectNumber, `groups/${groupId}`)}`;
     try {
       const response: Group = await makeRequest(url, {
         headers: {

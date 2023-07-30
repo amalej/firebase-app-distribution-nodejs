@@ -1,4 +1,4 @@
-import FirebaseAppDistribution from "../src";
+import { FirebaseAppDistribution } from "../src";
 import { PROJECT_NUMBER } from "./contants";
 
 describe("Test authentication success.", () => {

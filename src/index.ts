@@ -50,7 +50,7 @@ interface FirebaseAppDistributionArgs<T extends AuthClient = JSONClient> {
     | ImpersonatedOptions;
 }
 
-export default class FirebaseAppDistribution {
+export class FirebaseAppDistribution {
   projectNumber: string;
   testers: Testers;
   groups: Groups;

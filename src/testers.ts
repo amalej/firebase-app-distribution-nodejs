@@ -1,4 +1,4 @@
-import FirebaseAppDistribution from ".";
+import { FirebaseAppDistribution } from ".";
 import { constructUrl, makeRequest } from "./utils";
 
 export interface Tester {

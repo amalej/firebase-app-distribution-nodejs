@@ -1,5 +1,5 @@
 import { Group } from "../src/groups";
-import FirebaseAppDistribution from "../src/index";
+import { FirebaseAppDistribution } from "../src/index";
 import {
   PROJECT_NUMBER,
   SERIVCE_ACCOUNT_PATH,
@@ -31,7 +31,7 @@ describe("Test the groups endpoint", () => {
 
   it(`Should get the added tester group "${GROUP_DISPLAY_NAMES[0]}".`, async () => {
     const response: Group | null = await firebaseAppDistribution.groups.get(
-      GROUP_DISPLAY_NAMES[0]
+      GROUP_DISPLAY_NAMES[0] as Lowercase<string>
     );
     expect(response!.name).toBe(
       `projects/${PROJECT_NUMBER}/groups/${GROUP_DISPLAY_NAMES[0]}`
