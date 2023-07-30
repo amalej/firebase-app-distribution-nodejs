@@ -17,7 +17,7 @@ A NodeJS library used to access [Firebase App Distribution APIs](https://firebas
    - Follow the steps here to [download the service account key](https://cloud.google.com/iam/docs/keys-create-delete#creating).
 
 ```js
-import FirebaseAppDistribution from "firebase-app-distribution";
+import { FirebaseAppDistribution } from "firebase-app-distribution";
 
 async function testGetTestersApi() {
   const firebaseAppDistribution = new FirebaseAppDistribution({
