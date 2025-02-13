@@ -1,9 +1,9 @@
 {
   "name": "firebase-app-distribution",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A library that uses Firebase App Distribution APIs.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/amalej/firebase-app-distribution-nodejs"
@@ -18,7 +18,7 @@
     "test:utils": "jest -- utils.test.ts"
   },
   "files": [
-    "dist"
+    "lib"
   ],
   "keywords": [
     "Firebase",
