@@ -3,15 +3,22 @@ export type AsyncFunction<T> = () => Promise<T>;
 export const BASE_URL: string =
   "https://firebaseappdistribution.googleapis.com/v1/projects";
 
-export async function makeRequest(
+export const APP_DISTRIBUTION_ENDPOINT: string =
+  "https://firebaseappdistribution.googleapis.com";
+export const ENDPOINT_VERSION: string = "v1";
+
+export async function makeRequest<T>(
   input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<any> {
+  init?: RequestInit,
+): Promise<T> {
   const response = await fetch(input, init);
   if (response.status !== 200) {
     const errMessage = await response.text();
-    throw Error(errMessage);
+    throw Error(
+      `Request failed with status code ${response.status} and message: ${errMessage}`,
+    );
   }
+
   const responseText = await response.text();
   const responseObj = JSON.parse(responseText);
   return responseObj;
