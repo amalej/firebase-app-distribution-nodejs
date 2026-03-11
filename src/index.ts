@@ -1,85 +1,61 @@
-import {
-  AuthClient,
-  ExternalAccountClientOptions,
-  GoogleAuth,
-  GoogleAuthOptions,
-  ImpersonatedOptions,
-  JWTOptions,
-  OAuth2ClientOptions,
-  UserRefreshClientOptions,
-} from "google-auth-library";
+import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import Testers from "./testers";
-import Groups from "./groups";
-import { JSONClient } from "google-auth-library/build/src/auth/googleauth";
 
-interface CredentialBody {
-  client_email?: string;
-  private_key?: string;
-  [key: string]: any;
-}
+export interface FirebaseAppDistributionAuthOptions extends Omit<
+  GoogleAuthOptions,
+  "scopes" | "projectId"
+> {}
 
-interface FirebaseAppDistributionArgs<T extends AuthClient = JSONClient> {
-  /**
-   * Your project number.
-   */
-  projectNumber: string;
-  /**
-   * An `AuthClient` to use
-   */
-  authClient?: T;
-  /**
-   * Path to a .json, .pem, or .p12 key file
-   */
-  keyFilename?: string;
-  /**
-   * Path to a .json, .pem, or .p12 key file
-   */
-  keyFile?: string;
-  /**
-   * Object containing client_email and private_key properties, or the
-   * external account client options.
-   */
-  credentials?: CredentialBody | ExternalAccountClientOptions;
-  /**
-   * Options object passed to the constructor of the client
-   */
-  clientOptions?:
-    | JWTOptions
-    | OAuth2ClientOptions
-    | UserRefreshClientOptions
-    | ImpersonatedOptions;
-}
+const AUTH_SCOPES = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/firebase",
+];
 
 export class FirebaseAppDistribution {
   projectNumber: string;
+  projectId: string;
   testers: Testers;
-  groups: Groups;
-  private googleAuthArgs: GoogleAuthOptions;
+  // groups: Groups;
+  private googleAuth: GoogleAuth;
   private accessToken: string | undefined;
-  constructor({
-    projectNumber,
-    keyFilename,
-    keyFile,
-    credentials,
-  }: FirebaseAppDistributionArgs) {
-    this.projectNumber = projectNumber;
-    this.googleAuthArgs = {
-      keyFilename,
-      keyFile,
-      credentials,
-    };
-    this.testers = new Testers(this, projectNumber);
-    this.groups = new Groups(this, projectNumber);
+  constructor(authOptions: FirebaseAppDistributionAuthOptions) {
+    this.googleAuth = new GoogleAuth({
+      ...authOptions,
+      scopes: AUTH_SCOPES,
+    });
+    this.testers = new Testers(this);
+    // this.groups = new Groups(this);
+  }
+
+  async getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return this.projectId;
+    }
+
+    this.projectId = await this.googleAuth.getProjectId();
+    return this.projectId;
+  }
+
+  async getProjectNumber(): Promise<string> {
+    if (this.projectNumber) {
+      return this.projectNumber;
+    }
+    const projectId = await this.googleAuth.getProjectId();
+    const client = await this.googleAuth.getClient();
+
+    const url = `https://cloudresourcemanager.googleapis.com/v1/projects/${projectId}`;
+    const res: any = await client.request({ url });
+
+    this.projectNumber = res.data.projectNumber;
+    return this.projectNumber;
   }
 
   async getAccessToken(): Promise<string> {
-    if (this.accessToken === undefined) {
-      const auth = new GoogleAuth({
-        ...this.googleAuthArgs,
-        scopes: "https://www.googleapis.com/auth/cloud-platform",
-      });
-      this.accessToken = await auth.getAccessToken();
+    if (this.accessToken) {
+      return this.accessToken;
     }
+
+    this.accessToken = await this.googleAuth.getAccessToken();
     return this.accessToken;
   }
 }
