@@ -36,5 +36,7 @@ export const GROUP_DISPLAY_NAMES: string[] = [
 
 export const PROJECT_NUMBER: string =
   process.env.PROJECT_NUMBER || "471512247705";
+export const PROJECT_ID: string =
+  process.env.PROJECT_ID || "app-distribution-testproj";
 export const SERIVCE_ACCOUNT_PATH: string =
   process.env.SERIVCE_ACCOUNT_PATH || "./service-account.json";

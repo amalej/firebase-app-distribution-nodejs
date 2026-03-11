@@ -11,9 +11,6 @@ export function isArraySame(array1: any[], array2: any[]): boolean {
   return false;
 }
 
-export function subArray(arr: any[], start: number, end: number): any[] {
-  if (!end) {
-    end = -1;
-  }
+export function subArray(arr: any[], start: number, end?: number): any[] {
   return arr.slice(start, end);
 }

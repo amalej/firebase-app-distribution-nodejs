@@ -79,4 +79,18 @@ describe("Test if list endpoint is accurate", () => {
     );
     expect(isArraySame(response, subArray(TESTER_EMAILS, 0, 10))).toBe(true);
   }, 10000);
+
+  it(`Should add testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS.at(-1)}".`, async () => {
+    const response: Tester[] = await firebaseAppDistribution.testers.add(
+      subArray(TESTER_EMAILS, 0),
+    );
+    expect(response.length).toBe(TESTER_EMAILS.length);
+  }, 10000);
+
+  it(`Should remove testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS.at(-1)}".`, async () => {
+    const response: string[] = await firebaseAppDistribution.testers.remove(
+      subArray(TESTER_EMAILS, 0),
+    );
+    expect(isArraySame(response, subArray(TESTER_EMAILS, 0))).toBe(true);
+  }, 10000);
 });

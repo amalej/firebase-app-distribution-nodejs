@@ -42,17 +42,17 @@ interface GroupAddTestersArgs {
 }
 
 export default class Groups {
-  private projectNumber: string;
   private parent: FirebaseAppDistribution;
-  constructor(parent: FirebaseAppDistribution, projectNumber: string) {
-    this.projectNumber = projectNumber;
+  constructor(parent: FirebaseAppDistribution) {
     this.parent = parent;
   }
 
   async create({ displayName, groupId = "" }: GroupCreateArgs): Promise<Group> {
-    const query = groupId !== "" ? `?groupId=${groupId}` : "";
     const accessToken = await this.parent.getAccessToken();
-    const url = `${constructUrl(this.projectNumber, "groups")}${query}`;
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const query = groupId !== "" ? `?groupId=${groupId}` : "";
+    const url = `${constructUrl(projectNumber, "groups")}${query}`;
     const requestBody = JSON.stringify({
       displayName,
     });
@@ -87,7 +87,9 @@ export default class Groups {
 
   async get(groupId: validGroupId): Promise<Group | null> {
     const accessToken = await this.parent.getAccessToken();
-    const url = `${constructUrl(this.projectNumber, `groups/${groupId}`)}`;
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = `${constructUrl(projectNumber, `groups/${groupId}`)}`;
     try {
       const response: Group = await makeRequest(url, {
         headers: {
@@ -106,6 +108,8 @@ export default class Groups {
     Group[]
   > {
     const accessToken = await this.parent.getAccessToken();
+    const projectNumber = await this.parent.getProjectNumber();
+
     let groupList = [];
     let query = `?pageSize=${pageSize}`;
     let nextPageToken = "";
@@ -115,7 +119,7 @@ export default class Groups {
           ? `&pageToken=${encodeURIComponent(nextPageToken)}`
           : "";
       const url = `${constructUrl(
-        this.projectNumber,
+        projectNumber,
         "groups",
       )}${query}${nextPageToken}`;
       const response: GroupListResponse = await makeRequest(url, {
@@ -145,8 +149,10 @@ export default class Groups {
     emails,
   }: GroupRemoveTestersArgs): Promise<number> {
     const accessToken = await this.parent.getAccessToken();
+    const projectNumber = await this.parent.getProjectNumber();
+
     const url = constructUrl(
-      this.projectNumber,
+      projectNumber,
       `groups/${groupId}:batchLeave`,
     );
     const reuqestBody = JSON.stringify({
@@ -166,7 +172,9 @@ export default class Groups {
 
   async addTesters({ groupId, emails }: GroupAddTestersArgs): Promise<number> {
     const accessToken = await this.parent.getAccessToken();
-    const url = constructUrl(this.projectNumber, `groups/${groupId}:batchJoin`);
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = constructUrl(projectNumber, `groups/${groupId}:batchJoin`);
     const reuqestBody = JSON.stringify({
       emails,
       createMissingTesters: true,

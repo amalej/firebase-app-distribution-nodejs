@@ -1,9 +1,10 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import Testers from "./testers";
+import Groups from "./groups";
 
 export interface FirebaseAppDistributionAuthOptions extends Omit<
   GoogleAuthOptions,
-  "scopes" | "projectId"
+  "scopes"
 > {}
 
 const AUTH_SCOPES = [
@@ -12,19 +13,21 @@ const AUTH_SCOPES = [
 ];
 
 export class FirebaseAppDistribution {
-  projectNumber: string;
-  projectId: string;
-  testers: Testers;
-  // groups: Groups;
+  private projectNumber: string | null = null;
+  private projectId: string | null = null;
   private googleAuth: GoogleAuth;
   private accessToken: string | undefined;
+
+  testers: Testers;
+  groups: Groups;
+
   constructor(authOptions: FirebaseAppDistributionAuthOptions) {
     this.googleAuth = new GoogleAuth({
       ...authOptions,
       scopes: AUTH_SCOPES,
     });
     this.testers = new Testers(this);
-    // this.groups = new Groups(this);
+    this.groups = new Groups(this);
   }
 
   async getProjectId(): Promise<string> {
@@ -47,6 +50,9 @@ export class FirebaseAppDistribution {
     const res: any = await client.request({ url });
 
     this.projectNumber = res.data.projectNumber;
+    if (!this.projectNumber) {
+      throw new Error("Failed to retrieve project number");
+    }
     return this.projectNumber;
   }
 
@@ -55,7 +61,11 @@ export class FirebaseAppDistribution {
       return this.accessToken;
     }
 
-    this.accessToken = await this.googleAuth.getAccessToken();
+    const accessToken = await this.googleAuth.getAccessToken();
+    if (!accessToken) {
+      throw new Error("Failed to retrieve access token");
+    }
+    this.accessToken = accessToken;
     return this.accessToken;
   }
 }

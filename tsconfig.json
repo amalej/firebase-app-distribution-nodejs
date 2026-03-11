@@ -1,27 +1,17 @@
 {
     "compilerOptions": {
+        "target": "es2016",
         "module": "commonjs",
         "esModuleInterop": true,
-        "target": "es6",
-        "moduleResolution": "node",
-        "lib": [
-            "es2017",
-            "es7",
-            "es6",
-            "dom"
-        ],
+        "strict": true,
+        "skipLibCheck": true,
         "declaration": true,
         "sourceMap": true,
+        "rootDir": "src",
         "outDir": "lib"
     },
-    "lib": [
-        "es2015"
-    ],
     "include": [
-        "src/**/*"
+        "src"
     ],
-    "exclude": [
-        "node_modules",
-        "**/*.test.ts"
-    ]
+    "exclude": []
 }

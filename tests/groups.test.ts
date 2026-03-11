@@ -1,7 +1,7 @@
 import { Group } from "../src/groups";
 import { FirebaseAppDistribution } from "../src/index";
 import {
-  PROJECT_NUMBER,
+  PROJECT_ID,
   SERIVCE_ACCOUNT_PATH,
   GROUP_DISPLAY_NAMES,
   TESTER_EMAILS,
@@ -11,8 +11,8 @@ import { isArraySame, subArray } from "./utils";
 
 describe("Test the groups endpoint", () => {
   const firebaseAppDistribution = new FirebaseAppDistribution({
-    projectNumber: PROJECT_NUMBER,
     keyFile: SERIVCE_ACCOUNT_PATH,
+    projectId: PROJECT_ID,
   });
 
   it("Should reach list groups endpoint.", async () => {
@@ -34,12 +34,12 @@ describe("Test the groups endpoint", () => {
       GROUP_DISPLAY_NAMES[0] as Lowercase<string>
     );
     expect(response!.name).toBe(
-      `projects/${PROJECT_NUMBER}/groups/${GROUP_DISPLAY_NAMES[0]}`
+      `projects/${PROJECT_ID}/groups/${GROUP_DISPLAY_NAMES[0]}`
     );
   });
 
   it(`Should remove the tester group "${GROUP_DISPLAY_NAMES[0]}".`, async () => {
-    const response: number = await firebaseAppDistribution.groups.delete(
+    const response: {} = await firebaseAppDistribution.groups.delete(
       GROUP_DISPLAY_NAMES[0] as Lowercase<string>
     );
     // Delete originally returns empty object on success, modified it to return 200 response code.
@@ -49,7 +49,7 @@ describe("Test the groups endpoint", () => {
 
 describe("Test behavior when groups already exists", () => {
   const firebaseAppDistribution = new FirebaseAppDistribution({
-    projectNumber: PROJECT_NUMBER,
+    projectId: PROJECT_ID,
     keyFile: SERIVCE_ACCOUNT_PATH,
   });
 
@@ -69,8 +69,7 @@ describe("Test behavior when groups already exists", () => {
       });
       fail("It should have errored out when creating an existing tester.");
     } catch (error) {
-      const errObj = JSON.parse(error.message);
-      expect(errObj.error.code).toBe(409);
+      expect(error.message).toContain("409");
     }
   });
 

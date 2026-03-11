@@ -9,8 +9,8 @@
     "url": "https://github.com/amalej/firebase-app-distribution-nodejs"
   },
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
     "test": "jest --coverage --verbose",
     "test:index": "jest -- index.test.ts",
     "test:testers": "jest -- testers.test.ts",
@@ -20,6 +20,18 @@
   "files": [
     "lib"
   ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    }
+  },
   "keywords": [
     "Firebase",
     "App",
@@ -32,6 +44,7 @@
     "@types/node": "^20.4.4",
     "jest": "^29.6.1",
     "ts-jest": "^29.1.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.1.6"
   },
   "dependencies": {
