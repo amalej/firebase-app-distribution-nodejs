@@ -9,7 +9,6 @@ import { isArraySame, subArray } from "./utils";
 
 describe("Test the testers endpoint", () => {
   const firebaseAppDistribution = new FirebaseAppDistribution({
-    projectNumber: PROJECT_NUMBER,
     keyFile: SERIVCE_ACCOUNT_PATH,
   });
 
@@ -24,16 +23,16 @@ describe("Test the testers endpoint", () => {
       TESTER_EMAILS[0],
     ]);
     expect(response[0].name).toBe(
-      `projects/${PROJECT_NUMBER}/testers/${TESTER_EMAILS[0]}`
+      `projects/${PROJECT_NUMBER}/testers/${TESTER_EMAILS[0]}`,
     );
   });
 
   it(`Should get the added tester "${TESTER_EMAILS[0]}".`, async () => {
     const response: Tester | null = await firebaseAppDistribution.testers.get(
-      TESTER_EMAILS[0]
+      TESTER_EMAILS[0],
     );
     expect(response!.name).toBe(
-      `projects/${PROJECT_NUMBER}/testers/${TESTER_EMAILS[0]}`
+      `projects/${PROJECT_NUMBER}/testers/${TESTER_EMAILS[0]}`,
     );
   });
 
@@ -46,7 +45,7 @@ describe("Test the testers endpoint", () => {
 
   it(`Should get null when trying to get non-existent tester "${TESTER_EMAILS[0]}-xxx-abc-xzy".`, async () => {
     const response: Tester | null = await firebaseAppDistribution.testers.get(
-      `${TESTER_EMAILS[0]}-xxx-abc-xzy`
+      `${TESTER_EMAILS[0]}-xxx-abc-xzy`,
     );
     expect(response).toBe(null);
   });
@@ -54,13 +53,12 @@ describe("Test the testers endpoint", () => {
 
 describe("Test if list endpoint is accurate", () => {
   const firebaseAppDistribution = new FirebaseAppDistribution({
-    projectNumber: PROJECT_NUMBER,
     keyFile: SERIVCE_ACCOUNT_PATH,
   });
 
   it(`Should add testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS[9]}".`, async () => {
     const response: Tester[] = await firebaseAppDistribution.testers.add(
-      subArray(TESTER_EMAILS, 0, 10)
+      subArray(TESTER_EMAILS, 0, 10),
     );
     expect(response.length).toBe(10);
   }, 10000);
@@ -70,14 +68,14 @@ describe("Test if list endpoint is accurate", () => {
       email: "tester00*@gmail.com",
     });
     const emails = response.map((tester) =>
-      tester.name.replace(/(.*)(\/)/gm, "")
+      tester.name.replace(/(.*)(\/)/gm, ""),
     );
     expect(isArraySame(emails, subArray(TESTER_EMAILS, 0, 10))).toBe(true);
   }, 10000);
 
   it(`Should remove testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS[9]}".`, async () => {
     const response: string[] = await firebaseAppDistribution.testers.remove(
-      subArray(TESTER_EMAILS, 0, 10)
+      subArray(TESTER_EMAILS, 0, 10),
     );
     expect(isArraySame(response, subArray(TESTER_EMAILS, 0, 10))).toBe(true);
   }, 10000);

@@ -1,5 +1,9 @@
 import { FirebaseAppDistribution } from ".";
-import { constructUrl, makeRequest } from "./utils";
+import {
+  APP_DISTRIBUTION_ENDPOINT,
+  ENDPOINT_VERSION,
+  makeRequest,
+} from "./utils";
 
 export interface Tester {
   name: string;
@@ -29,21 +33,28 @@ interface TesterListArgs {
   maxPages?: number;
 }
 
+interface TesterUpdateArgs {
+  displayName?: string;
+  groups?: string[];
+}
+
 export default class Testers {
-  private projectNumber: string;
   private parent: FirebaseAppDistribution;
-  constructor(parent: FirebaseAppDistribution, projectNumber: string) {
+  constructor(parent: FirebaseAppDistribution) {
     this.parent = parent;
-    this.projectNumber = projectNumber;
   }
 
   async add(emails: string[]): Promise<Tester[]> {
     const accessToken = await this.parent.getAccessToken();
-    const url = constructUrl(this.projectNumber, "testers:batchAdd");
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers:batchAdd`,
+    );
     const requestBody: string = JSON.stringify({
       emails,
     });
-    const response: TestersAddResponse = await makeRequest(url, {
+    const response = await makeRequest<TestersAddResponse>(url.toString(), {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
@@ -55,11 +66,15 @@ export default class Testers {
 
   async remove(emails: string[]): Promise<string[]> {
     const accessToken = await this.parent.getAccessToken();
-    const url = constructUrl(this.projectNumber, "testers:batchRemove");
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers:batchRemove`,
+    );
     const requestBody: string = JSON.stringify({
       emails,
     });
-    const response: TestersRemoveResponse = await makeRequest(url, {
+    const response = await makeRequest<TestersRemoveResponse>(url.toString(), {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
@@ -71,30 +86,38 @@ export default class Testers {
 
   async list({
     pageSize = 50,
-    email = "",
-    displayName = "",
-    groups = "",
+    email,
+    displayName,
+    groups,
     maxPages = 10,
   }: TesterListArgs = {}): Promise<Tester[]> {
     const accessToken = await this.parent.getAccessToken();
-    let testerList = [];
-    let filter = "";
-    let query = `?pageSize=${pageSize}`;
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const testerList = [];
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers`,
+    );
+    url.searchParams.set("pageSize", pageSize.toString());
+
+    let filterParts = [];
+    if (email) filterParts.push(`name="projects/-/testers/${email}"`);
+    if (displayName) filterParts.push(`displayName="${displayName}"`);
+    if (groups) filterParts.push(`groups="projects/*/groups/${groups}"`);
+
+    if (filterParts.length > 0) {
+      url.searchParams.set("filter", filterParts.join(" "));
+    }
+
     let nextPageToken = "";
-    filter += email !== "" ? `name="projects/-/testers/${email}"` : "";
-    filter += displayName !== "" ? `displayName="${displayName}"` : "";
-    filter += groups !== "" ? `groups="projects/*/groups/${groups}"` : "";
-    filter = filter !== "" ? `&filter=${encodeURIComponent(filter)}` : "";
     for (let page = 0; page < maxPages; page++) {
-      nextPageToken =
-        nextPageToken !== ""
-          ? `&pageToken=${encodeURIComponent(nextPageToken)}`
-          : "";
-      const url = `${constructUrl(
-        this.projectNumber,
-        "testers"
-      )}${query}${nextPageToken}${filter}`;
-      const response: TestersListResponse = await makeRequest(url, {
+      if (nextPageToken) {
+        url.searchParams.set("pageToken", nextPageToken);
+      } else {
+        url.searchParams.delete("pageToken");
+      }
+      const response = await makeRequest<TestersListResponse>(url.toString(), {
         headers: {
           authorization: `Bearer ${accessToken}`,
         },
@@ -118,35 +141,61 @@ export default class Testers {
 
   async get(email: string): Promise<Tester | null> {
     const accessToken = await this.parent.getAccessToken();
-    let query = `?pageSize=1`;
-    const filter = `&filter=${encodeURIComponent(
-      `name="projects/-/testers/${email}"`
-    )}`;
-    const url = `${constructUrl(
-      this.projectNumber,
-      "testers"
-    )}${query}${filter}`;
-    const response: TestersListResponse = await makeRequest(url, {
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers`,
+    );
+    url.searchParams.append("pageSize", "1");
+    url.searchParams.append("filter", `name="projects/-/testers/${email}"`);
+    const response = await makeRequest<TestersListResponse>(url.toString(), {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
       body: null,
       method: "GET",
     });
+
     return response.testers !== undefined ? response.testers[0] : null;
   }
 
-  // TODO: The patch API is not properly documented. Implement in the future.
-  // See: https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.testers/patch
-  // async update(email: string, displayName: string = "", groups: string[]) {
-  //   const accessToken = await this.getAccessToken();
-  //   const url = `${this.constructUrl("testers")}/${email}`;
-  //   const response = await fetch(url, {
-  //     headers: {
-  //       authorization: `Bearer ${accessToken}`,
-  //     },
-  //     body: null,
-  //     method: "PATCH",
-  //   });
-  // }
+  async update(
+    email: string,
+    { displayName, groups }: TesterUpdateArgs,
+  ): Promise<Tester> {
+    const accessToken = await this.parent.getAccessToken();
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers/${email}`,
+    );
+
+    let updateMaskParts = [];
+    if (displayName !== undefined) {
+      updateMaskParts.push("displayName");
+    }
+    if (groups !== undefined) {
+      updateMaskParts.push("groups");
+    }
+    if (updateMaskParts.length > 0) {
+      url.searchParams.append("updateMask", updateMaskParts.join(","));
+    }
+
+    const formattedGroups = groups?.map(
+      (group) => `projects/${projectNumber}/groups/${group}`,
+    );
+
+    const response = await makeRequest<Tester>(url.toString(), {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        displayName: displayName || undefined,
+        groups: formattedGroups || undefined,
+      }),
+      method: "PATCH",
+    });
+
+    return response;
+  }
 }
