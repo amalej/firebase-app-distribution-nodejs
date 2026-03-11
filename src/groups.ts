@@ -1,5 +1,10 @@
 import { FirebaseAppDistribution } from ".";
-import { constructUrl, makeRequest } from "./utils";
+import {
+  APP_DISTRIBUTION_ENDPOINT,
+  constructUrl,
+  ENDPOINT_VERSION,
+  makeRequest,
+} from "./utils";
 
 export interface Group {
   name: string;
@@ -61,9 +66,13 @@ export default class Groups {
     return response;
   }
 
-  async delete(groupId: validGroupId): Promise<number> {
+  async delete(groupId: validGroupId): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
-    const url = `${constructUrl(this.projectNumber, `groups/${groupId}`)}`;
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups/${groupId}`,
+    );
     // This response body is an empty object if successfull.
     // See: https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.groups/delete#response-body
     await makeRequest(url, {
@@ -73,7 +82,7 @@ export default class Groups {
       body: null,
       method: "DELETE",
     });
-    return 200;
+    return {};
   }
 
   async get(groupId: validGroupId): Promise<Group | null> {
@@ -107,7 +116,7 @@ export default class Groups {
           : "";
       const url = `${constructUrl(
         this.projectNumber,
-        "groups"
+        "groups",
       )}${query}${nextPageToken}`;
       const response: GroupListResponse = await makeRequest(url, {
         headers: {
@@ -138,7 +147,7 @@ export default class Groups {
     const accessToken = await this.parent.getAccessToken();
     const url = constructUrl(
       this.projectNumber,
-      `groups/${groupId}:batchLeave`
+      `groups/${groupId}:batchLeave`,
     );
     const reuqestBody = JSON.stringify({
       emails,
