@@ -40,6 +40,10 @@ interface GroupAddTestersArgs {
   emails: string[];
 }
 
+interface GroupUpdateArgs {
+  displayName?: string;
+}
+
 export default class Groups {
   private parent: FirebaseAppDistribution;
   constructor(parent: FirebaseAppDistribution) {
@@ -145,6 +149,35 @@ export default class Groups {
       }
     }
     return groupList;
+  }
+
+  async update(
+    groupId: validGroupId,
+    { displayName }: GroupUpdateArgs,
+  ): Promise<Group> {
+    const accessToken = await this.parent.getAccessToken();
+    const projectNumber = await this.parent.getProjectNumber();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups/${groupId}`,
+    );
+
+    if (displayName) {
+      url.searchParams.set("updateMask", "displayName");
+    }
+
+    const requestBody = JSON.stringify({
+      displayName,
+    });
+
+    const response = await makeRequest<Group>(url, {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      body: requestBody,
+      method: "PATCH",
+    });
+    return response;
   }
 
   async removeTesters({
