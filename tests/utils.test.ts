@@ -1,19 +1,22 @@
 import { PROJECT_NUMBER, SERIVCE_ACCOUNT_PATH } from "./contants";
-import { constructUrl, makeRequest } from "../src/utils";
+import { makeRequest } from "../src/utils";
 import { FirebaseAppDistribution } from "../src/index";
 
 describe("Test the utils files", () => {
   it("Should properly construct a base url", () => {
-    const url = constructUrl(PROJECT_NUMBER, "testers");
-    expect(url).toBe(
-      `https://firebaseappdistribution.googleapis.com/v1/projects/${PROJECT_NUMBER}/testers`
+    const url = new URL(
+      `https://firebaseappdistribution.googleapis.com/v1/projects/${PROJECT_NUMBER}/testers`,
+    );
+    expect(url.toString()).toBe(
+      `https://firebaseappdistribution.googleapis.com/v1/projects/${PROJECT_NUMBER}/testers`,
     );
   });
 
   it("Should properly reach the endpoint", async () => {
-    const url = `${constructUrl(PROJECT_NUMBER, "testers")}?pageSize=1`;
+    const url = new URL(
+      `https://firebaseappdistribution.googleapis.com/v1/projects/${PROJECT_NUMBER}/testers?pageSize=1`,
+    );
     const firebaseAppDistribution = new FirebaseAppDistribution({
-      projectNumber: PROJECT_NUMBER,
       keyFile: SERIVCE_ACCOUNT_PATH,
     });
     const accessToken = await firebaseAppDistribution.getAccessToken();
@@ -30,9 +33,9 @@ describe("Test the utils files", () => {
     try {
       await makeRequest("https://google.com");
       fail("It should throw an error when response is not JSON.");
-    } catch (error) {
+    } catch (error: any) {
       expect(error.message).toBe(
-        `Unexpected token '<', "<!doctype "... is not valid JSON`
+        `Unexpected token '<', "<!doctype "... is not valid JSON`,
       );
     }
   });

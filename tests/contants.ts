@@ -21,7 +21,7 @@ export const TESTER_EMAILS: string[] = [
   "tester019@gmail.com",
 ];
 
-export const GROUP_DISPLAY_NAMES: string[] = [
+export const TEST_GROUP_IDS: string[] = [
   "tester-group-000",
   "tester-group-001",
   "tester-group-002",
