@@ -1,7 +1,6 @@
 import { FirebaseAppDistribution } from ".";
 import {
   APP_DISTRIBUTION_ENDPOINT,
-  constructUrl,
   ENDPOINT_VERSION,
   makeRequest,
 } from "./utils";
@@ -51,12 +50,16 @@ export default class Groups {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    const query = groupId !== "" ? `?groupId=${groupId}` : "";
-    const url = `${constructUrl(projectNumber, "groups")}${query}`;
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups`,
+    );
+    url.searchParams.set("groupId", groupId);
+
     const requestBody = JSON.stringify({
       displayName,
     });
-    const response: Group = await makeRequest(url, {
+
+    const response = await makeRequest<Group>(url, {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
@@ -75,33 +78,31 @@ export default class Groups {
     );
     // This response body is an empty object if successfull.
     // See: https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.groups/delete#response-body
-    await makeRequest(url, {
+    const response = await makeRequest<{}>(url, {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
       body: null,
       method: "DELETE",
     });
-    return {};
+    return response;
   }
 
   async get(groupId: validGroupId): Promise<Group | null> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    const url = `${constructUrl(projectNumber, `groups/${groupId}`)}`;
-    try {
-      const response: Group = await makeRequest(url, {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-        body: null,
-        method: "GET",
-      });
-      return response;
-    } catch (_) {
-      return null;
-    }
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups/${groupId}`,
+    );
+    const response = await makeRequest<Group>(url, {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      body: null,
+      method: "GET",
+    });
+    return response;
   }
 
   async list({ pageSize = 25, maxPages = 10 }: GroupListArgs = {}): Promise<
@@ -110,19 +111,21 @@ export default class Groups {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    let groupList = [];
-    let query = `?pageSize=${pageSize}`;
+    const groupList: Group[] = [];
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups`,
+    );
+    url.searchParams.set("pageSize", pageSize.toString());
+
     let nextPageToken = "";
     for (let page = 0; page < maxPages; page++) {
-      nextPageToken =
-        nextPageToken !== ""
-          ? `&pageToken=${encodeURIComponent(nextPageToken)}`
-          : "";
-      const url = `${constructUrl(
-        projectNumber,
-        "groups",
-      )}${query}${nextPageToken}`;
-      const response: GroupListResponse = await makeRequest(url, {
+      if (nextPageToken) {
+        url.searchParams.set("pageToken", nextPageToken);
+      } else {
+        url.searchParams.delete("pageToken");
+      }
+      const response = await makeRequest<GroupListResponse>(url, {
         headers: {
           authorization: `Bearer ${accessToken}`,
         },
@@ -147,47 +150,48 @@ export default class Groups {
   async removeTesters({
     groupId,
     emails,
-  }: GroupRemoveTestersArgs): Promise<number> {
+  }: GroupRemoveTestersArgs): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    const url = constructUrl(
-      projectNumber,
-      `groups/${groupId}:batchLeave`,
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups/${groupId}:batchLeave`,
     );
     const reuqestBody = JSON.stringify({
       emails,
     });
     // This response body is an empty object if successfull.
     // See: https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.groups/batchLeave#response-body
-    await makeRequest(url, {
+    const response = await makeRequest<{}>(url, {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
       body: reuqestBody,
       method: "POST",
     });
-    return 200;
+    return response;
   }
 
-  async addTesters({ groupId, emails }: GroupAddTestersArgs): Promise<number> {
+  async addTesters({ groupId, emails }: GroupAddTestersArgs): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    const url = constructUrl(projectNumber, `groups/${groupId}:batchJoin`);
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups/${groupId}:batchJoin`,
+    );
     const reuqestBody = JSON.stringify({
       emails,
       createMissingTesters: true,
     });
     // This response body is an empty object if successfull.
     // See: https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.groups/batchJoin#response-body
-    await makeRequest(url, {
+    const response = await makeRequest<{}>(url, {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },
       body: reuqestBody,
       method: "POST",
     });
-    return 200;
+    return response;
   }
 }

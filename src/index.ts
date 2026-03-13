@@ -1,16 +1,12 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import Testers from "./testers";
 import Groups from "./groups";
+import { AUTH_SCOPES } from "./utils";
 
 export interface FirebaseAppDistributionAuthOptions extends Omit<
   GoogleAuthOptions,
   "scopes"
 > {}
-
-const AUTH_SCOPES = [
-  "https://www.googleapis.com/auth/cloud-platform",
-  "https://www.googleapis.com/auth/firebase",
-];
 
 export class FirebaseAppDistribution {
   private projectNumber: string | null = null;
