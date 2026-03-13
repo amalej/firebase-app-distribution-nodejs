@@ -1,11 +1,13 @@
-export type AsyncFunction<T> = () => Promise<T>;
-
 export const BASE_URL: string =
   "https://firebaseappdistribution.googleapis.com/v1/projects";
 
 export const APP_DISTRIBUTION_ENDPOINT: string =
   "https://firebaseappdistribution.googleapis.com";
 export const ENDPOINT_VERSION: string = "v1";
+export const AUTH_SCOPES = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/firebase",
+];
 
 export async function makeRequest<T>(
   input: RequestInfo | URL,
@@ -22,8 +24,4 @@ export async function makeRequest<T>(
   const responseText = await response.text();
   const responseObj = JSON.parse(responseText);
   return responseObj;
-}
-
-export function constructUrl(projectNumber: string, endpoint: string): string {
-  return `${BASE_URL}/${projectNumber}/${endpoint}`;
 }

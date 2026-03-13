@@ -36,6 +36,31 @@ describe("Test the testers endpoint", () => {
     );
   });
 
+  it(`Should update the tester "${TESTER_EMAILS[0]}".`, async () => {
+    const response: Tester | null =
+      await firebaseAppDistribution.testers.update(TESTER_EMAILS[0], {
+        displayName: "Updated Tester Name",
+      });
+    expect(response!.displayName).toBe("Updated Tester Name");
+  });
+
+  it(`Should add the tester "${TESTER_EMAILS[0]}" to a group.`, async () => {
+    await firebaseAppDistribution.groups.create({
+      displayName: "test-group",
+      groupId: "test-group",
+    });
+    const response = await firebaseAppDistribution.testers.update(
+      TESTER_EMAILS[0],
+      {
+        groups: ["test-group"],
+      },
+    );
+    await firebaseAppDistribution.groups.delete("test-group");
+    expect(response!.groups).toContain(
+      `projects/${PROJECT_NUMBER}/groups/test-group`,
+    );
+  }, 10_000);
+
   it(`Should remove a tester "${TESTER_EMAILS[0]}".`, async () => {
     const response: string[] = await firebaseAppDistribution.testers.remove([
       TESTER_EMAILS[0],
@@ -66,6 +91,18 @@ describe("Test if list endpoint is accurate", () => {
   it(`Should list testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS[9]}".`, async () => {
     const response: Tester[] = await firebaseAppDistribution.testers.list({
       email: "tester00*@gmail.com",
+    });
+    const emails = response.map((tester) =>
+      tester.name.replace(/(.*)(\/)/gm, ""),
+    );
+    expect(isArraySame(emails, subArray(TESTER_EMAILS, 0, 10))).toBe(true);
+  }, 10000);
+
+  it(`Should list with pagination testers "${TESTER_EMAILS[0]}" -> "${TESTER_EMAILS[9]}".`, async () => {
+    const response: Tester[] = await firebaseAppDistribution.testers.list({
+      email: "tester00*@gmail.com",
+      pageSize: 2,
+      maxPages: 5,
     });
     const emails = response.map((tester) =>
       tester.name.replace(/(.*)(\/)/gm, ""),
