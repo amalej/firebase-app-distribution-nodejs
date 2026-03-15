@@ -31,12 +31,10 @@ interface GroupCreateArgs {
 }
 
 interface GroupRemoveTestersArgs {
-  groupId: validGroupId;
   emails: string[];
 }
 
 interface GroupAddTestersArgs {
-  groupId: validGroupId;
   emails: string[];
 }
 
@@ -180,10 +178,10 @@ export class Groups {
     return response;
   }
 
-  async removeTesters({
-    groupId,
-    emails,
-  }: GroupRemoveTestersArgs): Promise<{}> {
+  async removeTesters(
+    groupId: string,
+    { emails }: GroupRemoveTestersArgs,
+  ): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -205,7 +203,10 @@ export class Groups {
     return response;
   }
 
-  async addTesters({ groupId, emails }: GroupAddTestersArgs): Promise<{}> {
+  async addTesters(
+    groupId: string,
+    { emails }: GroupAddTestersArgs,
+  ): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 

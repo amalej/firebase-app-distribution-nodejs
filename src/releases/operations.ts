@@ -11,7 +11,7 @@ type UploadReleaseResult =
   | "RELEASE_UPDATED"
   | "RELEASE_UNMODIFIED";
 
-interface Release {
+export interface Release {
   name: string;
   releaseNotes?: string;
   displayVersion: string;
@@ -38,6 +38,12 @@ interface OperationsGetResponse {
   metadata?: any;
 }
 
+function isValidOperationName(operationName: string): boolean {
+  const regex =
+    /^projects\/[^/]+\/apps\/[^/]+\/releases\/[^/]+\/operations\/[^/]+$/;
+  return regex.test(operationName);
+}
+
 export class Operations {
   private parent: FirebaseAppDistribution;
 
@@ -46,6 +52,10 @@ export class Operations {
   }
 
   async get(operationName: string): Promise<OperationsGetResponse> {
+    if (!isValidOperationName(operationName)) {
+      throw new Error(`Invalid operation name: ${operationName}`);
+    }
+
     const accessToken = await this.parent.getAccessToken();
     const url = new URL(
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${operationName}`,

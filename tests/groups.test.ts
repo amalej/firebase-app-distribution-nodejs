@@ -140,18 +140,22 @@ describe("Test removing and adding of tester to groups", () => {
   });
 
   it(`Should add testers ${TESTER_EMAILS[0]} -> ${TESTER_EMAILS[4]} to group "${TEST_GROUP_IDS[0]}".`, async () => {
-    const response = await firebaseAppDistribution.groups.addTesters({
-      groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-      emails: subArray(TESTER_EMAILS, 0, 5),
-    });
+    const response = await firebaseAppDistribution.groups.addTesters(
+      TEST_GROUP_IDS[0] as Lowercase<string>,
+      {
+        emails: subArray(TESTER_EMAILS, 0, 5),
+      },
+    );
     expect(response).toStrictEqual({});
   });
 
   it(`Should remove testers ${TESTER_EMAILS[0]} -> ${TESTER_EMAILS[4]} from group "${TEST_GROUP_IDS[0]}".`, async () => {
-    const response = await firebaseAppDistribution.groups.removeTesters({
-      groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-      emails: subArray(TESTER_EMAILS, 0, 5),
-    });
+    const response = await firebaseAppDistribution.groups.removeTesters(
+      TEST_GROUP_IDS[0] as Lowercase<string>,
+      {
+        emails: subArray(TESTER_EMAILS, 0, 5),
+      },
+    );
     expect(response).toStrictEqual({});
   });
 
