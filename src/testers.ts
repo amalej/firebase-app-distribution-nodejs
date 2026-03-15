@@ -161,7 +161,7 @@ export class Testers {
 
   async update(
     email: string,
-    { displayName, groups }: TesterUpdateArgs,
+    { displayName, groups }: TesterUpdateArgs = {},
   ): Promise<Tester> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();

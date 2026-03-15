@@ -45,19 +45,19 @@ describe("Test the testers endpoint", () => {
   });
 
   it(`Should add the tester "${TESTER_EMAILS[0]}" to a group.`, async () => {
-    await firebaseAppDistribution.groups.create({
-      displayName: "test-group",
-      groupId: "test-group",
-    });
+    await firebaseAppDistribution.groups.create(
+      "test-group-display-name",
+      "test-group-id",
+    );
     const response = await firebaseAppDistribution.testers.update(
       TESTER_EMAILS[0],
       {
-        groups: ["test-group"],
+        groups: ["test-group-id"],
       },
     );
-    await firebaseAppDistribution.groups.delete("test-group");
+    await firebaseAppDistribution.groups.delete("test-group-id");
     expect(response!.groups).toContain(
-      `projects/${PROJECT_NUMBER}/groups/test-group`,
+      `projects/${PROJECT_NUMBER}/groups/test-group-id`,
     );
   }, 10_000);
 

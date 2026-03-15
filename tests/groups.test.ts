@@ -24,10 +24,9 @@ describe("The groups endpoint", () => {
   });
 
   it(`Should create a tester group "${TEST_GROUP_IDS[0]}".`, async () => {
-    const response = await firebaseAppDistribution.groups.create({
-      displayName: TEST_GROUP_IDS[0],
-      groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-    });
+    const response = await firebaseAppDistribution.groups.create(
+      TEST_GROUP_IDS[0],
+    );
     expect(response.displayName).toBe(TEST_GROUP_IDS[0]);
   });
 
@@ -66,17 +65,28 @@ describe("Behavior when groups already exists", () => {
     keyFile: SERIVCE_ACCOUNT_PATH,
   });
 
-  it(`Should raise an 409 error when adding existing tester group "${TEST_GROUP_IDS[0]}".`, async () => {
-    await firebaseAppDistribution.groups.create({
-      displayName: TEST_GROUP_IDS[0],
-      groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-    });
+  it(`Should create the tester group "${TEST_GROUP_IDS[0]} and had correct displayName and groupdId".`, async () => {
+    await firebaseAppDistribution.groups.create(
+      `${TEST_GROUP_IDS[0]}-DISPLAY_NAME`,
+      TEST_GROUP_IDS[0],
+    );
 
+    const group = await firebaseAppDistribution.groups.get(
+      TEST_GROUP_IDS[0] as Lowercase<string>,
+    );
+
+    expect(group!.displayName).toBe(`${TEST_GROUP_IDS[0]}-DISPLAY_NAME`);
+    expect(group!.name).toBe(
+      `projects/${PROJECT_NUMBER}/groups/${TEST_GROUP_IDS[0]}`,
+    );
+  }, 10_000);
+
+  it(`Should raise an 409 error when adding existing tester group "${TEST_GROUP_IDS[0]}".`, async () => {
     try {
-      await firebaseAppDistribution.groups.create({
-        displayName: TEST_GROUP_IDS[0],
-        groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-      });
+      await firebaseAppDistribution.groups.create(
+        TEST_GROUP_IDS[0],
+        TEST_GROUP_IDS[0],
+      );
       fail("It should have errored out when creating an existing tester.");
     } catch (error: any) {
       expect(error.message).toContain("409");
@@ -99,9 +109,7 @@ describe("Test behavior when handling multiple groups.", () => {
 
   it(`Should add tester groups "${TEST_GROUP_IDS[0]}" -> "${TEST_GROUP_IDS[4]}".`, async () => {
     for (let index = 0; index <= 5; index++) {
-      await firebaseAppDistribution.groups.create({
-        displayName: TEST_GROUP_IDS[index],
-      });
+      await firebaseAppDistribution.groups.create(TEST_GROUP_IDS[index]);
     }
   }, 15000);
 
@@ -132,19 +140,16 @@ describe("Test removing and adding of tester to groups", () => {
   });
 
   it(`Should create the group "${TEST_GROUP_IDS[0]}}"to add the testers to.`, async () => {
-    const response = await firebaseAppDistribution.groups.create({
-      displayName: TEST_GROUP_IDS[0],
-      groupId: TEST_GROUP_IDS[0] as Lowercase<string>,
-    });
+    const response = await firebaseAppDistribution.groups.create(
+      TEST_GROUP_IDS[0],
+    );
     expect(response.displayName).toBe(TEST_GROUP_IDS[0]);
   });
 
   it(`Should add testers ${TESTER_EMAILS[0]} -> ${TESTER_EMAILS[4]} to group "${TEST_GROUP_IDS[0]}".`, async () => {
     const response = await firebaseAppDistribution.groups.addTesters(
       TEST_GROUP_IDS[0] as Lowercase<string>,
-      {
-        emails: subArray(TESTER_EMAILS, 0, 5),
-      },
+      subArray(TESTER_EMAILS, 0, 5),
     );
     expect(response).toStrictEqual({});
   });
@@ -152,9 +157,7 @@ describe("Test removing and adding of tester to groups", () => {
   it(`Should remove testers ${TESTER_EMAILS[0]} -> ${TESTER_EMAILS[4]} from group "${TEST_GROUP_IDS[0]}".`, async () => {
     const response = await firebaseAppDistribution.groups.removeTesters(
       TEST_GROUP_IDS[0] as Lowercase<string>,
-      {
-        emails: subArray(TESTER_EMAILS, 0, 5),
-      },
+      subArray(TESTER_EMAILS, 0, 5),
     );
     expect(response).toStrictEqual({});
   });
@@ -182,10 +185,7 @@ describe("List endpoint pagination", () => {
 
   it(`Should correctly paginate groups list endpoint.`, async () => {
     for (let index = 0; index < 5; index++) {
-      await firebaseAppDistribution.groups.create({
-        displayName: TEST_GROUP_IDS[index],
-        groupId: TEST_GROUP_IDS[index] as Lowercase<string>,
-      });
+      await firebaseAppDistribution.groups.create(TEST_GROUP_IDS[index]);
     }
 
     const response = await firebaseAppDistribution.groups.list({

@@ -18,24 +18,11 @@ interface GroupListResponse {
   nextPageToken: string;
 }
 
-type validGroupId = Lowercase<string>;
+type ValidGroupId = Lowercase<string>;
 
 interface GroupListArgs {
   pageSize?: number;
   maxPages?: number;
-}
-
-interface GroupCreateArgs {
-  displayName: string;
-  groupId?: validGroupId;
-}
-
-interface GroupRemoveTestersArgs {
-  emails: string[];
-}
-
-interface GroupAddTestersArgs {
-  emails: string[];
 }
 
 interface GroupUpdateArgs {
@@ -48,14 +35,16 @@ export class Groups {
     this.parent = parent;
   }
 
-  async create({ displayName, groupId = "" }: GroupCreateArgs): Promise<Group> {
+  async create(displayName: string, groupId?: string): Promise<Group> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
     const url = new URL(
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/groups`,
     );
-    url.searchParams.set("groupId", groupId);
+    if (groupId) {
+      url.searchParams.set("groupId", groupId);
+    }
 
     const requestBody = JSON.stringify({
       displayName,
@@ -71,7 +60,7 @@ export class Groups {
     return response;
   }
 
-  async delete(groupId: validGroupId): Promise<{}> {
+  async delete(groupId: ValidGroupId): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -90,7 +79,7 @@ export class Groups {
     return response;
   }
 
-  async get(groupId: validGroupId): Promise<Group | null> {
+  async get(groupId: ValidGroupId): Promise<Group | null> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -150,7 +139,7 @@ export class Groups {
   }
 
   async update(
-    groupId: validGroupId,
+    groupId: ValidGroupId,
     { displayName }: GroupUpdateArgs,
   ): Promise<Group> {
     const accessToken = await this.parent.getAccessToken();
@@ -178,10 +167,7 @@ export class Groups {
     return response;
   }
 
-  async removeTesters(
-    groupId: string,
-    { emails }: GroupRemoveTestersArgs,
-  ): Promise<{}> {
+  async removeTesters(groupId: string, emails: string[]): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -203,10 +189,7 @@ export class Groups {
     return response;
   }
 
-  async addTesters(
-    groupId: string,
-    { emails }: GroupAddTestersArgs,
-  ): Promise<{}> {
+  async addTesters(groupId: string, emails: string[]): Promise<{}> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
