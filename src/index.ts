@@ -1,7 +1,8 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
+import { AUTH_SCOPES } from "./utils";
 import Testers from "./testers";
 import Groups from "./groups";
-import { AUTH_SCOPES } from "./utils";
+import { Releases } from "./releases";
 
 export interface FirebaseAppDistributionAuthOptions extends Omit<
   GoogleAuthOptions,
@@ -16,6 +17,7 @@ export class FirebaseAppDistribution {
 
   testers: Testers;
   groups: Groups;
+  releases: Releases;
 
   constructor(authOptions: FirebaseAppDistributionAuthOptions) {
     this.googleAuth = new GoogleAuth({
@@ -24,6 +26,7 @@ export class FirebaseAppDistribution {
     });
     this.testers = new Testers(this);
     this.groups = new Groups(this);
+    this.releases = new Releases(this);
   }
 
   async getProjectId(): Promise<string> {
@@ -31,6 +34,9 @@ export class FirebaseAppDistribution {
       return this.projectId;
     }
 
+    // For some reason, the project ID is not available until after we get an access token.
+    // This is a workaround to ensure we have the project ID when needed.
+    await this.getAccessToken();
     this.projectId = await this.googleAuth.getProjectId();
     return this.projectId;
   }
@@ -39,7 +45,8 @@ export class FirebaseAppDistribution {
     if (this.projectNumber) {
       return this.projectNumber;
     }
-    const projectId = await this.googleAuth.getProjectId();
+
+    const projectId = await this.getProjectId();
     const client = await this.googleAuth.getClient();
 
     const url = `https://cloudresourcemanager.googleapis.com/v1/projects/${projectId}`;
