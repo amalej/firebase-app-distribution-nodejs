@@ -38,7 +38,7 @@ interface TesterUpdateArgs {
   groups?: string[];
 }
 
-export default class Testers {
+export class Testers {
   private parent: FirebaseAppDistribution;
   constructor(parent: FirebaseAppDistribution) {
     this.parent = parent;

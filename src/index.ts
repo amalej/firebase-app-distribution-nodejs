@@ -1,7 +1,7 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { AUTH_SCOPES } from "./utils";
-import Testers from "./testers";
-import Groups from "./groups";
+import { Testers } from "./testers";
+import { Groups } from "./groups";
 import { Releases } from "./releases";
 
 export interface FirebaseAppDistributionAuthOptions extends Omit<

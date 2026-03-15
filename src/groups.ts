@@ -44,7 +44,7 @@ interface GroupUpdateArgs {
   displayName?: string;
 }
 
-export default class Groups {
+export class Groups {
   private parent: FirebaseAppDistribution;
   constructor(parent: FirebaseAppDistribution) {
     this.parent = parent;
