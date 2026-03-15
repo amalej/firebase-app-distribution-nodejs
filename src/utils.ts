@@ -1,6 +1,3 @@
-export const BASE_URL: string =
-  "https://firebaseappdistribution.googleapis.com/v1/projects";
-
 export const APP_DISTRIBUTION_ENDPOINT: string =
   "https://firebaseappdistribution.googleapis.com";
 export const ENDPOINT_VERSION: string = "v1";
