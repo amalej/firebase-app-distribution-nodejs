@@ -96,22 +96,36 @@ FirebaseAppDistribution
 
 <ul>
   <li>getAccessToken() - Gets the access token that is used to authenticate requests.</li>
-  <li>testers</li>
+  <li>testers
     <ul>
       <li>add() - Adds the specified emails to the testers list.</li>
       <li>remove() - Removes the specified emails from the testers list.</li>
       <li>list() - Lists testers.</li>
-      <li>get() - Get a specific tester.</li>
+      <li>get() - Gets a specific tester.</li>
+      <li>update() - Updates a tester.</li>
     </ul>
   </li>
   <br>
-  <li>groups</li>
+  <li>groups
     <ul>
       <li>create() - Creates a group.</li>
       <li>delete() - Deletes a group.</li>
-      <li>get() - Get a group.</li>
-      <li>list() - List a group.</li>
+      <li>get() - Gets a group.</li>
+      <li>list() - Lists groups.</li>
+      <li>update() - Updates a group.</li>
       <li>removeTesters() - Removes testers from a group.</li>
       <li>addTesters() - Adds testers to a group.</li>
     </ul>
+  </li>
+  <br>
+  <li>releases
+    <ul>
+      <li>upload() - Uploads a release.</li>
+      <li>operations
+        <ul>
+          <li>get() - Gets the status of an operation.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
 </ul>
