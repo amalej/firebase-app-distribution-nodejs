@@ -76,6 +76,9 @@ describe("Internal Error cases.", () => {
     jest.spyOn(GoogleAuth.prototype, "getClient").mockResolvedValue({
       request: mockRequest,
     } as any);
+    jest.spyOn(GoogleAuth.prototype, "getAccessToken").mockResolvedValue({
+      request: mockRequest,
+    } as any);
 
     await expect(firebaseAppDistribution.getProjectNumber()).rejects.toThrow(
       "Failed to retrieve project number",
