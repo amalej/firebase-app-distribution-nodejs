@@ -13,7 +13,7 @@ export async function makeRequest<T>(
   const response = await fetch(input, init);
   if (response.status !== 200) {
     const errMessage = await response.text();
-    throw Error(
+    throw new Error(
       `Request failed with status code ${response.status} and message: ${errMessage}`,
     );
   }
