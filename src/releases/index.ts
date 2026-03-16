@@ -7,26 +7,16 @@ import {
 import { Operations, Release } from "./operations";
 import { FirebaseAppDistribution } from "../";
 
-interface UploadReleaseOptions {
-  appId: string;
-  binaryPath: string;
-  fileName: string;
-}
-
 // https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.apps.releases.operations#resource:-operation
 interface UploadReleaseResponse {
   name: string; // name of the operation.
-}
-
-interface DeleteReleasesOptions {
-  appId: string;
-  releaseNames: string[];
 }
 
 interface ListReleasesOptions {
   pageSize?: number;
   orderBy?: string;
   filter?: string;
+  maxPages?: number;
 }
 
 interface ListReleasesResponse {
@@ -34,9 +24,27 @@ interface ListReleasesResponse {
   nextPageToken: string;
 }
 
+interface DistributeReleaseOptions {
+  testerEmails: string[];
+  groupAliases: string[];
+}
+
+interface UpdateReleaseOptions {
+  releaseNotes?: string;
+}
+
 function isValidReleaseName(releaseName: string): boolean {
   const regex = /^projects\/[^/]+\/apps\/[^/]+\/releases\/[^/]+$/;
   return regex.test(releaseName);
+}
+
+function validateReleaseName(releaseName: string) {
+  if (!isValidReleaseName(releaseName)) {
+    throw new Error(
+      `Invalid release name: ${releaseName}. Expected 'projects/*/apps/*/releases/*'`,
+    );
+  }
+  return;
 }
 
 export class Releases {
@@ -49,7 +57,7 @@ export class Releases {
     this.operations = new Operations(this.parent);
   }
 
-  public async upload({ appId, binaryPath, fileName }: UploadReleaseOptions) {
+  public async upload(appId: string, binaryPath: string, fileName: string) {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -71,11 +79,9 @@ export class Releases {
     return response;
   }
 
-  public async delete(appId: string, releaseNames: string[]) {
+  public async delete(appId: string, releaseNames: string[]): Promise<{}> {
     for (let releaseName of releaseNames) {
-      if (!isValidReleaseName(releaseName)) {
-        throw new Error(`Invalid release name: ${releaseName}`);
-      }
+      validateReleaseName(releaseName);
     }
 
     const accessToken = await this.parent.getAccessToken();
@@ -89,27 +95,69 @@ export class Releases {
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/apps/${appId}/releases:batchDelete`,
     );
 
-    const response = await makeRequest(url.toString(), {
+    const response = await makeRequest<{}>(url.toString(), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        name: releaseNames,
+        names: releaseNames,
       }),
     });
 
     return response;
   }
 
-  public async distribute() {}
+  public async distribute(
+    releaseName: string,
+    { testerEmails = [], groupAliases = [] }: DistributeReleaseOptions,
+  ) {
+    validateReleaseName(releaseName);
+    if (testerEmails.length === 0 && groupAliases.length === 0) {
+      throw new Error("Must specify at least one tester or group");
+    }
+    const accessToken = await this.parent.getAccessToken();
 
-  public async get() {}
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}`,
+    );
+
+    const response = await makeRequest<Release>(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        testerEmails,
+        groupAliases,
+      }),
+    });
+
+    return response;
+  }
+
+  public async get(releaseName: string) {
+    validateReleaseName(releaseName);
+    const accessToken = await this.parent.getAccessToken();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}`,
+    );
+
+    const response = await makeRequest<Release>(url.toString(), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response;
+  }
 
   public async list(
     appId: string,
-    { pageSize, orderBy, filter }: ListReleasesOptions = {},
-  ): Promise<ListReleasesResponse> {
+    { pageSize, orderBy, filter, maxPages }: ListReleasesOptions = {},
+  ): Promise<Release[]> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -127,15 +175,74 @@ export class Releases {
       url.searchParams.set("filter", filter);
     }
 
-    const response = await makeRequest<ListReleasesResponse>(url.toString(), {
-      method: "GET",
+    let nextPageToken = "";
+    let currentPage = 0;
+    const releases: Release[] = [];
+    do {
+      if (nextPageToken) {
+        url.searchParams.set("pageToken", nextPageToken);
+      } else {
+        url.searchParams.delete("pageToken");
+      }
+
+      const response = await makeRequest<ListReleasesResponse>(url.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.releases === undefined) {
+        break;
+      }
+
+      releases.push(...response.releases);
+      if (response.nextPageToken !== undefined) {
+        nextPageToken = response.nextPageToken;
+      } else {
+        break;
+      }
+
+      currentPage++;
+      if (maxPages && currentPage >= maxPages) {
+        break;
+      }
+    } while (nextPageToken);
+
+    return releases;
+  }
+
+  async #update(
+    releaseName: string,
+    { releaseNotes }: UpdateReleaseOptions = {},
+  ) {
+    validateReleaseName(releaseName);
+    const accessToken = await this.parent.getAccessToken();
+
+    const url = new URL(
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}`,
+    );
+
+    if (releaseNotes) {
+      url.searchParams.set("updateMask", "releaseNotes.text");
+    }
+
+    const response = await makeRequest<Release>(url.toString(), {
+      method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      body: JSON.stringify({
+        releaseNotes: {
+          text: releaseNotes,
+        },
+      }),
     });
 
     return response;
   }
 
-  public async update() {}
+  public async addReleaseNotes(releaseName: string, releaseNotes: string) {
+    return this.#update(releaseName, { releaseNotes });
+  }
 }

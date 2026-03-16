@@ -20,6 +20,8 @@ export interface Release {
   firebaseConsoleUri: string;
   testingUri: string;
   binaryDownloadUri: string;
+  updateTime?: string;
+  expireTime?: string;
 }
 
 interface OperationsGetResponse {
