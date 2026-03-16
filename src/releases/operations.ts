@@ -24,9 +24,9 @@ export interface Release {
   expireTime?: string;
 }
 
-interface OperationsGetResponse {
+export interface Operation {
   name: string;
-  done: boolean;
+  done?: boolean;
   error?: {
     code: number;
     message: string;
@@ -53,7 +53,7 @@ export class Operations {
     this.parent = parent;
   }
 
-  async get(operationName: string): Promise<OperationsGetResponse> {
+  async get(operationName: string): Promise<Operation> {
     if (!isValidOperationName(operationName)) {
       throw new Error(`Invalid operation name: ${operationName}`);
     }
@@ -63,7 +63,7 @@ export class Operations {
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${operationName}`,
     );
 
-    const response = await makeRequest<OperationsGetResponse>(url.toString(), {
+    const response = await makeRequest<Operation>(url.toString(), {
       headers: {
         authorization: `Bearer ${accessToken}`,
       },

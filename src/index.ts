@@ -4,6 +4,17 @@ import { Testers } from "./testers";
 import { Groups } from "./groups";
 import { Releases } from "./releases";
 
+interface UploadAndDistributeOptions {
+  appId: string;
+  binaryPath: string;
+  fileName: string;
+  testerEmails: string[];
+  groupAliases: string[];
+  releaseNotes?: string;
+  uploadOperationTimeout?: number;
+  uploadOperationInteval?: number;
+}
+
 export interface FirebaseAppDistributionAuthOptions extends Omit<
   GoogleAuthOptions,
   "scopes"
@@ -70,5 +81,55 @@ export class FirebaseAppDistribution {
     }
     this.accessToken = accessToken;
     return this.accessToken;
+  }
+
+  async uploadAndDistribute({
+    appId,
+    binaryPath,
+    fileName,
+    testerEmails = [],
+    groupAliases = [],
+    releaseNotes,
+    uploadOperationInteval = 500,
+    uploadOperationTimeout = 5_000,
+  }: UploadAndDistributeOptions) {
+    const operation = await this.releases.upload(appId, binaryPath, fileName);
+    const operationName = operation.name;
+
+    const uploadTimeout = setTimeout(() => {
+      throw new Error("Upload operation timed out");
+    }, uploadOperationTimeout);
+
+    let doneUploading = false;
+    let releaseName: string | null = null;
+    while (!doneUploading) {
+      const operationData = await this.releases.operations.get(operationName);
+      if (operationData.done) {
+        doneUploading = true;
+        releaseName = operationData.response!.release.name;
+        clearTimeout(uploadTimeout);
+      }
+
+      if (operationData.error) {
+        throw new Error(
+          `Upload operation failed with code ${operationData.error.code} and error: ${operationData.error.message}`,
+        );
+      }
+      await new Promise((res) => setTimeout(res, uploadOperationInteval));
+    }
+
+    if (testerEmails.length !== 0 || groupAliases.length !== 0) {
+      await this.releases.distribute(releaseName!, {
+        testerEmails,
+        groupAliases,
+      });
+    }
+
+    if (releaseNotes) {
+      await this.releases.addReleaseNotes(releaseName!, releaseNotes);
+    }
+
+    const finalReleaseData = await this.releases.get(releaseName!);
+    return finalReleaseData;
   }
 }
