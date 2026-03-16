@@ -8,9 +8,10 @@ import {
 export interface Group {
   name: string;
   displayName: string;
-  testerCount: number;
-  releaseCount: number;
-  inviteLinkCount: number;
+  testerCount?: number;
+  releaseCount?: number;
+  inviteLinkCount?: number;
+  id: string; // custom added field
 }
 
 interface GroupListResponse {
@@ -27,6 +28,10 @@ interface GroupListArgs {
 
 interface GroupUpdateArgs {
   displayName?: string;
+}
+
+function getGroupIdFromName(groupName: string) {
+  return groupName.split("/").pop()!;
 }
 
 export class Groups {
@@ -57,7 +62,8 @@ export class Groups {
       body: requestBody,
       method: "POST",
     });
-    return response;
+
+    return { ...response, id: getGroupIdFromName(response.name) };
   }
 
   async delete(groupId: ValidGroupId): Promise<{}> {
@@ -93,7 +99,12 @@ export class Groups {
       body: null,
       method: "GET",
     });
-    return response;
+
+    if (response.name === undefined) {
+      return null;
+    }
+
+    return { ...response, id: getGroupIdFromName(response.name) };
   }
 
   async list({ pageSize = 25, maxPages = 10 }: GroupListArgs = {}): Promise<
@@ -128,7 +139,12 @@ export class Groups {
         break;
       }
 
-      groupList.push(...response.groups);
+      for (let group of response.groups) {
+        groupList.push({
+          ...group,
+          id: getGroupIdFromName(group.name),
+        });
+      }
       if (response.nextPageToken !== undefined) {
         nextPageToken = response.nextPageToken;
       } else {
@@ -164,7 +180,8 @@ export class Groups {
       body: requestBody,
       method: "PATCH",
     });
-    return response;
+
+    return { ...response, id: getGroupIdFromName(response.name) };
   }
 
   async removeTesters(groupId: string, emails: string[]): Promise<{}> {
@@ -186,6 +203,7 @@ export class Groups {
       body: reuqestBody,
       method: "POST",
     });
+
     return response;
   }
 
@@ -209,6 +227,7 @@ export class Groups {
       body: reuqestBody,
       method: "POST",
     });
+
     return response;
   }
 }

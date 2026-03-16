@@ -7,14 +7,15 @@ import {
 
 export interface Tester {
   name: string;
-  displayName: string | undefined;
-  groups: string[] | undefined;
-  lastActivityTime: string | undefined;
+  displayName?: string;
+  groups?: string[];
+  lastActivityTime?: string;
+  email: string; // custom added field
 }
 
 interface TestersListResponse {
   testers: Tester[];
-  nextPageToken: string | undefined;
+  nextPageToken?: string;
 }
 
 interface TestersRemoveResponse {
@@ -38,6 +39,10 @@ interface TesterUpdateArgs {
   groups?: string[];
 }
 
+function getEmailFromName(testerName: string) {
+  return testerName.split("/").pop()!;
+}
+
 export class Testers {
   private parent: FirebaseAppDistribution;
   constructor(parent: FirebaseAppDistribution) {
@@ -47,6 +52,8 @@ export class Testers {
   async add(emails: string[]): Promise<Tester[]> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
+
+    const testers: Tester[] = [];
 
     const url = new URL(
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers:batchAdd`,
@@ -61,7 +68,15 @@ export class Testers {
       body: requestBody,
       method: "POST",
     });
-    return response.testers || [];
+
+    for (let tester of response.testers) {
+      testers.push({
+        ...tester,
+        email: getEmailFromName(tester.name),
+      });
+    }
+
+    return testers;
   }
 
   async remove(emails: string[]): Promise<string[]> {
@@ -81,6 +96,7 @@ export class Testers {
       body: requestBody,
       method: "POST",
     });
+
     return response.emails || [];
   }
 
@@ -94,7 +110,7 @@ export class Testers {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
-    const testerList = [];
+    const testerList: Tester[] = [];
 
     const url = new URL(
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/projects/${projectNumber}/testers`,
@@ -129,13 +145,20 @@ export class Testers {
         break;
       }
 
-      testerList.push(...response.testers);
+      for (let tester of response.testers) {
+        testerList.push({
+          ...tester,
+          email: getEmailFromName(tester.name),
+        });
+      }
+
       if (response.nextPageToken !== undefined) {
         nextPageToken = response.nextPageToken;
       } else {
         break;
       }
     }
+
     return testerList;
   }
 
@@ -156,7 +179,12 @@ export class Testers {
       method: "GET",
     });
 
-    return response.testers !== undefined ? response.testers[0] : null;
+    return response.testers !== undefined
+      ? {
+          ...response.testers[0],
+          email: getEmailFromName(response.testers[0].name),
+        }
+      : null;
   }
 
   async update(
@@ -196,6 +224,6 @@ export class Testers {
       method: "PATCH",
     });
 
-    return response;
+    return { ...response, email: getEmailFromName(response.name) };
   }
 }
