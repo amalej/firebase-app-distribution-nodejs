@@ -121,7 +121,7 @@ export class Releases {
       `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}:distribute`,
     );
 
-    const response = await makeRequest<Release>(url.toString(), {
+    const response = await makeRequest<{}>(url.toString(), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
