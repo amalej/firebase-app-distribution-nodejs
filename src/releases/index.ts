@@ -4,13 +4,8 @@ import {
   ENDPOINT_VERSION,
   makeRequest,
 } from "../utils";
-import { Operations, Release } from "./operations";
+import { Operation, Operations, Release } from "./operations";
 import { FirebaseAppDistribution } from "../";
-
-// https://firebase.google.com/docs/reference/app-distribution/rest/v1/projects.apps.releases.operations#resource:-operation
-interface UploadReleaseResponse {
-  name: string; // name of the operation.
-}
 
 interface ListReleasesOptions {
   pageSize?: number;
@@ -57,7 +52,11 @@ export class Releases {
     this.operations = new Operations(this.parent);
   }
 
-  public async upload(appId: string, binaryPath: string, fileName: string) {
+  public async upload(
+    appId: string,
+    binaryPath: string,
+    fileName: string,
+  ): Promise<Operation> {
     const accessToken = await this.parent.getAccessToken();
     const projectNumber = await this.parent.getProjectNumber();
 
@@ -66,7 +65,7 @@ export class Releases {
     );
     const fileBuffer = readFileSync(binaryPath);
 
-    const response = await makeRequest<UploadReleaseResponse>(url.toString(), {
+    const response = await makeRequest<Operation>(url.toString(), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -119,7 +118,7 @@ export class Releases {
     const accessToken = await this.parent.getAccessToken();
 
     const url = new URL(
-      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}`,
+      `${APP_DISTRIBUTION_ENDPOINT}/${ENDPOINT_VERSION}/${releaseName}:distribute`,
     );
 
     const response = await makeRequest<Release>(url.toString(), {
